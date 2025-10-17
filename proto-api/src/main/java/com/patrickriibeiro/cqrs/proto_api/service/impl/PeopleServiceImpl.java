@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 @Service
 public class PeopleServiceImpl implements PeopleService {
@@ -23,27 +24,47 @@ public class PeopleServiceImpl implements PeopleService {
 
     @Override
     public Optional<Person> getPersonById(String id) {
-        return Optional.empty();
+        return listOfPeople.stream()
+                .filter(person -> person.getId().equals(id))
+                .findFirst();
     }
 
     @Override
     public Person createPerson(Person person) {
-        return null;
+        Person newPerson = Person.builder()
+                .id(UUID.randomUUID().toString())
+                .fullName(person.getFullName())
+                .birthDate(person.getBirthDate())
+                .age(person.getAge())
+                .build();
+        listOfPeople.add(newPerson);
+        return person;
     }
 
     @Override
     public Person updatePerson(String id, Person person) {
-        return null;
+        Optional<Person> findPerson = getPersonById(id);
+        if (findPerson.isEmpty()) {
+            throw new RuntimeException("Person not found");
+        }
+        listOfPeople.remove(findPerson.get());
+        Person personUpdate = changePersom(person);
+        listOfPeople.add(personUpdate);
+        return personUpdate;
     }
 
     @Override
     public void deletePerson(String id) {
-
+        listOfPeople.stream()
+                .filter(person -> person.getId().equals(id))
+                .findFirst().ifPresent(listOfPeople::remove);
     }
 
     @Override
     public List<Person> getPeopleByName(String name) {
-        return List.of();
+        return listOfPeople.stream()
+                .filter(person -> person.getFullName().toLowerCase().contains(name.toLowerCase()))
+                .toList();
     }
 
     @Override
@@ -60,5 +81,15 @@ public class PeopleServiceImpl implements PeopleService {
                     .build();
             listOfPeople.add(person);
         }
+    }
+
+
+    private Person changePersom(Person person){
+        return Person.builder()
+                .id(person.getId())
+                .fullName(person.getFullName())
+                .birthDate(person.getBirthDate())
+                .age(person.getAge())
+                .build();
     }
 }
